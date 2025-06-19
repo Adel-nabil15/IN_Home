@@ -21,7 +21,6 @@ export const Authentication = asyncHandler(async (req, res, next) => {
   }
 
   const decoded = await VerifyToken(token, TOKEN);
-  console.log("ddd");
 
   if (!decoded?.email) {
     return next(new Error("Invalid token", { cause: 401 }));

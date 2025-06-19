@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import UserModel from "../../DB/models/user.model.js";
 import { asyncHandler } from "../../utils/Error/index.js";
 import { ComparePass, HACH } from "../../utils/Hash/index.js";
@@ -5,9 +6,12 @@ import { GeneratToken } from "../../utils/token/index.js";
 
 // ----------------------- SignUp -----------------------
 export const SignUp = asyncHandler(async (req, res, next) => {
-  const { name, email, password, phone, address } = req.body;
+  const { name, email, password, Cpassword, phone, address } = req.body;
   const checkUser = await UserModel.findOne({ email });
   if (checkUser) return next(new Error("email already exists", { cause: 409 }));
+  if (password !== Cpassword) {
+    return next(new Error("password not match", { cause: 400 }));
+  }
   const hashedPassword = await HACH(password, parseInt(process.env.SOLT));
   const newUser = await UserModel.create({
     name,
@@ -15,17 +19,52 @@ export const SignUp = asyncHandler(async (req, res, next) => {
     password: hashedPassword,
     phone,
     address,
-    joinedAt: new Date().toLocaleDateString("en-GB"),
   });
   res.status(200).json({ message: "success", user: newUser });
+});
+
+// ----------------------- confirmEmailBySuperAdmin -----------------------
+export const confirmEmailBySuperAdmin = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  const checkUser = await UserModel.findOne({
+    email,
+    role: "pending",
+    confirmed: false,
+  });
+  if (!checkUser)
+    return next(
+      new Error("email not found or already confirmed or not pending", {
+        cause: 409,
+      })
+    );
+  if (checkUser.confirmed) {
+    return next(new Error("email already confirmed", { cause: 409 }));
+  }
+  await UserModel.findOneAndUpdate(
+    { email },
+    { confirmed: true, role: "admin" },
+    { new: true }
+  );
+  res.status(200).json({ message: "email confirmed successfully" });
 });
 
 // ----------------------- login -----------------------
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-  const checkUser = await UserModel.findOne({ email, confirmed: true });
-  if (!checkUser)
-    next(new Error("email not found or not confirmed", { cause: 409 }));
+  const checkUser = await UserModel.findOne({
+    email,
+    confirmed: true,
+    isFreezed: { $exists: false },
+    role: { $in: ["admin", "superadmin"] },
+  });
+  if (!checkUser) {
+    return next(
+      new Error(
+        "email not found or not confirmed or youare not admin or not superadmin ",
+        { cause: 409 }
+      )
+    );
+  }
   const match = await ComparePass(password, checkUser.password);
   if (!match) next(new Error("password not match", { cause: 409 }));
 
@@ -48,9 +87,10 @@ export const login = asyncHandler(async (req, res, next) => {
 
 // ----------------------- GetProfile -----------------------
 export const GetProfile = asyncHandler(async (req, res, next) => {
-  const user = await UserModel.findOne({ email: req.user.email }).select(
-    "name email role phone address confirmed "
-  );
+  const user = await UserModel.findOne({
+    email: req.user.email,
+    confirmed: true,
+  }).select("name email role phone address confirmed ");
   res.status(200).json({ message: "done", user });
 });
 
@@ -67,6 +107,9 @@ export const UpdateProfile = asyncHandler(async (req, res, next) => {
 // ----------------------- UpdatePassword -----------------------
 export const UpdatePassword = asyncHandler(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
+  if (!(await UserModel.findOne({ email: req.user.email, confirmed: true }))) {
+    return next(new Error("email not found or not confirmed", { cause: 409 }));
+  }
   const ComparePassword = await ComparePass(oldPassword, req.user.password);
   if (!ComparePassword) {
     return next(new Error("old password not match", { cause: 409 }));
@@ -84,9 +127,15 @@ export const UpdatePassword = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "password updated successfully" });
 });
 
-// ----------------------- FreazUser -----------------------
+// ----------------------- FreazUserBySuperAdmin -----------------------
 export const FreazUser = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
+  if (!(await UserModel.findOne({ _id: id, confirmed: true }))) {
+    return next(new Error("user not found or not confirmed", { cause: 404 }));
+  }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new Error("Invalid user ID", { cause: 400 }));
+  }
   if (req.user._id == id) {
     return next(new Error("you can't freezed yourself", { cause: 400 }));
   }

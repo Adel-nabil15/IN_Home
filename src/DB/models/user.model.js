@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      minlength: 3,
       trim: true,
     },
     email: {
@@ -12,12 +13,11 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i, "Invalid email address"],
     },
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: 3,
       trim: true,
     },
     phone: {
@@ -29,8 +29,8 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["superadmin", "admin"],
-      default: "admin",
+      enum: ["pending","superadmin", "admin"],
+      default: "pending",
     },
     address: {
       type: String,
@@ -38,15 +38,15 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
     joinedAt: {
-      type: Date, 
-      default: () => new Date().toLocaleDateString("en-GB"), 
+      type: String, 
+      default: () => new Date().toLocaleDateString("en-GB") ,
     },
     isFreezed: {
       type: Boolean,
     },
     confirmed: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   { timestamps: true }
