@@ -15,15 +15,6 @@ export const SignUpSchema = {
     .required(),
 };
 
-// ----------------------- confirmEmailBySuperAdminSchema -----------------------
-export const confirmEmailBySuperAdminSchema = {
-  body: joi
-    .object({
-      email: generalRoules.email.required(),
-    })
-    .required(),
-};
-
 // ----------------------- loginSchema -----------------------
 export const loginSchema = {
   body: joi

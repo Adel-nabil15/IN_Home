@@ -1,53 +1,51 @@
 import Router from "express";
 const UserRouter = Router();
 import {
-  SignUp,
-  login,
+  createUserByAdmin,
+  login, 
   GetProfile,
   UpdateProfile,
   UpdatePassword,
   FreazUser,
-  confirmEmailBySuperAdmin,
 } from "./user.service.js";
 import { Authentication, Authorization } from "../../middleware/Auth.js";
 import { validation } from "../../middleware/validation.js";
 import {
-  SignUpSchema,
-  confirmEmailBySuperAdminSchema,
   loginSchema,
   UpdateProfileSchema,
   UpdatePasswordSchema,
+  SignUpSchema,
 } from "./user.validation.js";
+// =============================== This Api of SuperAdmin =============================================
+UserRouter.post("/createUserByAdmin",validation(SignUpSchema), Authentication,Authorization(["superadmin"]), createUserByAdmin);
 
-UserRouter.post("/SignUp", validation(SignUpSchema), SignUp);
-UserRouter.patch(
-  "/confirmEmailBySuperAdmin",
-  validation(confirmEmailBySuperAdminSchema),
-  Authentication,
-  Authorization(["superadmin"]),
-  confirmEmailBySuperAdmin
-);
-UserRouter.post("/login", validation(loginSchema), login);
+
+// ===========================================================================
+UserRouter.post("/login", validation(loginSchema) , login);
+// ===========================================================================
 UserRouter.post(
   "/GetProfile",
   Authentication,
-  Authorization(["admin", "superadmin"]),
+  Authorization(["superadmin", "admin"]),
   GetProfile
 );
+// ===========================================================================
 UserRouter.patch(
   "/UpdateProfile",
   validation(UpdateProfileSchema),
   Authentication,
-  Authorization(["admin", "superadmin"]),
+  Authorization(["superadmin", "admin"]),
   UpdateProfile
 );
+// ================================ This Api of SuperAdmin ============================================
 UserRouter.patch(
-  "/UpdatePassword",
+  "/UpdatePassword/:id",
   validation(UpdatePasswordSchema),
   Authentication,
-  Authorization(["admin", "superadmin"]),
+  Authorization(["superadmin"]),
   UpdatePassword
 );
+// ================================ This Api of Admin ============================================
 UserRouter.delete(
   "/FreazUser/:id",
   Authentication,

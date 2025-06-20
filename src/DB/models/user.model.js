@@ -29,8 +29,8 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["pending","superadmin", "admin"],
-      default: "pending",
+      enum: ["superadmin", "admin"],
+      default: "admin",
     },
     address: {
       type: String,
@@ -44,9 +44,15 @@ const UserSchema = new mongoose.Schema(
     isFreezed: {
       type: Boolean,
     },
+    changeCredentialTime: {
+      type: Date,
+    },
+    updatedAt: {
+      type: Date,
+    },
     confirmed: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true }

@@ -4,48 +4,23 @@ import { asyncHandler } from "../../utils/Error/index.js";
 import { ComparePass, HACH } from "../../utils/Hash/index.js";
 import { GeneratToken } from "../../utils/token/index.js";
 
-// ----------------------- SignUp -----------------------
-export const SignUp = asyncHandler(async (req, res, next) => {
-  const { name, email, password, Cpassword, phone, address } = req.body;
-  const checkUser = await UserModel.findOne({ email });
-  if (checkUser) return next(new Error("email already exists", { cause: 409 }));
-  if (password !== Cpassword) {
-    return next(new Error("password not match", { cause: 400 }));
+// ----------------------- createUserByAdmin -----------------------
+
+export const createUserByAdmin = asyncHandler(async (req, res, next) => {
+  const { name, email, password, phone, address } = req.body;
+  const existingUser = await UserModel.findOne({ email });
+  if (existingUser) {
+    return next(new Error("Email already exists", { cause: 409 }));
   }
-  const hashedPassword = await HACH(password, parseInt(process.env.SOLT));
+  // const hashedPassword = await HACH(password, parseInt(process.env.SOLT));
   const newUser = await UserModel.create({
     name,
     email,
-    password: hashedPassword,
+    password,
     phone,
     address,
   });
-  res.status(200).json({ message: "success", user: newUser });
-});
-
-// ----------------------- confirmEmailBySuperAdmin -----------------------
-export const confirmEmailBySuperAdmin = asyncHandler(async (req, res, next) => {
-  const { email } = req.body;
-  const checkUser = await UserModel.findOne({
-    email,
-    role: "pending",
-    confirmed: false,
-  });
-  if (!checkUser)
-    return next(
-      new Error("email not found or already confirmed or not pending", {
-        cause: 409,
-      })
-    );
-  if (checkUser.confirmed) {
-    return next(new Error("email already confirmed", { cause: 409 }));
-  }
-  await UserModel.findOneAndUpdate(
-    { email },
-    { confirmed: true, role: "admin" },
-    { new: true }
-  );
-  res.status(200).json({ message: "email confirmed successfully" });
+  res.status(201).json({ message: "User created successfully", user: newUser });
 });
 
 // ----------------------- login -----------------------
@@ -65,9 +40,14 @@ export const login = asyncHandler(async (req, res, next) => {
       )
     );
   }
-  const match = await ComparePass(password, checkUser.password);
-  if (!match) next(new Error("password not match", { cause: 409 }));
+  // check password
+  if (checkUser.password !== password) {
+    return next(new Error("password not match", { cause: 409 }));
+  }
+  // const match = await ComparePass(password, checkUser.password);
+  // if (!match) next(new Error("password not match", { cause: 409 }));
 
+  // generate token
   const token = await GeneratToken({
     payload: {
       id: checkUser._id,
@@ -82,7 +62,7 @@ export const login = asyncHandler(async (req, res, next) => {
   if (!token) {
     return next(new Error("there is wrong in token", { cause: 400 }));
   }
-  res.status(200).json({ message: "success", token });
+  res.status(200).json({ message: "success", token, user: checkUser });
 });
 
 // ----------------------- GetProfile -----------------------
@@ -90,41 +70,53 @@ export const GetProfile = asyncHandler(async (req, res, next) => {
   const user = await UserModel.findOne({
     email: req.user.email,
     confirmed: true,
-  }).select("name email role phone address confirmed ");
+    isFreezed: { $exists: false },
+  }).select("name email role phone address");
   res.status(200).json({ message: "done", user });
 });
 
 // ----------------------- UpdateProfile -----------------------
 export const UpdateProfile = asyncHandler(async (req, res, next) => {
   const newUser = await UserModel.findOneAndUpdate(
-    { email: req.user.email, confirmed: true },
+    { email: req.user.email, confirmed: true, isFreezed: { $exists: false } },
     req.body,
     { new: true }
-  ).select("name email role phone address ");
+  ).select("name email role phone address");
+
   res.status(200).json({ message: "done", user: newUser });
 });
 
-// ----------------------- UpdatePassword -----------------------
+// ----------------------- UpdatePassword --------------------------------
 export const UpdatePassword = asyncHandler(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
-  if (!(await UserModel.findOne({ email: req.user.email, confirmed: true }))) {
-    return next(new Error("email not found or not confirmed", { cause: 409 }));
+  const { id } = req.params;
+  const user = await UserModel.findOne({ _id: id, confirmed: true });
+  if (!user) {
+    return next(new Error("user not found or not confirmed", { cause: 404 }));
   }
-  const ComparePassword = await ComparePass(oldPassword, req.user.password);
-  if (!ComparePassword) {
+  // const ComparePassword = await ComparePass(oldPassword, user.password);
+  // if (!ComparePassword) {
+  //   return next(new Error("old password not match", { cause: 409 }));
+  // }
+  if (user.password !== oldPassword) {
     return next(new Error("old password not match", { cause: 409 }));
   }
   if (oldPassword === newPassword) {
     return next(new Error("new password must be different", { cause: 400 }));
   }
-  const Hpass = await HACH(newPassword, parseInt(process.env.SOLT));
-
+  // const Hpass = await HACH(newPassword, parseInt(process.env.SOLT));
   const newUser = await UserModel.findOneAndUpdate(
-    { email: req.user.email, confirmed: true },
-    { password: Hpass },
+    { _id: id, confirmed: true },
+    {
+      password: newPassword,
+      changeCredentialTime: Date.now(),
+      updatedAt: Date.now(),
+    },
     { new: true }
-  ).select("name email role phone address ");
-  res.status(200).json({ message: "password updated successfully" });
+  ).select("name email role phone address password  updatedAt");
+  res
+    .status(200)
+    .json({ message: "password updated successfully ", user: newUser });
 });
 
 // ----------------------- FreazUserBySuperAdmin -----------------------
