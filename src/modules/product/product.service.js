@@ -145,12 +145,15 @@ export const exportProductsToExcel = asyncHandler(async (req, res, next) => {
     "addedBy",
     "name email phone"
   );
-  // check if products exists
+
+  // check if products exist
   if (products.length === 0) {
     return next(new Error("products not found", { cause: 404 }));
   }
+
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Data of Products");
+
   worksheet.columns = [
     { header: "Product Name", key: "name", width: 20 },
     { header: "Store Name", key: "storename", width: 20 },
@@ -168,18 +171,18 @@ export const exportProductsToExcel = asyncHandler(async (req, res, next) => {
     { header: "Total Ad Spending", key: "totalAdSpending", width: 20 },
   ];
 
-  // make header bold and white and background color blue
+  // style header
   worksheet.getRow(1).eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } }
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF1F4E78" }, 
+      fgColor: { argb: "FF1F4E78" },
     };
     cell.alignment = { vertical: "middle", horizontal: "center" };
   });
 
-  // make all cells center and wrap text
+  // style all columns (center + wrap)
   worksheet.columns.forEach((column) => {
     column.alignment = {
       vertical: "middle",
@@ -187,19 +190,18 @@ export const exportProductsToExcel = asyncHandler(async (req, res, next) => {
       wrapText: true,
     };
   });
+
   // add products to worksheet
   products.forEach((product) => {
     const adHistoryString = product.adSpendingHistory?.length
       ? product.adSpendingHistory
           .map(
             (ad, index) =>
-              `${index + 1}. date: ${ad.date}\n   platform: ${
-                ad.platform
-              }\n   price: ${ad.price}\n   notes: ${ad.notes ?? "No Notes"}`
+              `${index + 1}. date: ${ad.date}\n   platform: ${ad.platform}\n   price: ${ad.price}\n   notes: ${ad.notes ?? "No Notes"}`
           )
           .join("\n\n")
       : "لا يوجد إعلانات";
-    // add row to worksheet
+
     worksheet.addRow({
       name: product.name,
       storename: product.storename,
@@ -211,42 +213,42 @@ export const exportProductsToExcel = asyncHandler(async (req, res, next) => {
       quantitySold: product.quantitySold,
       commission: product.commission,
       totalCommission: product.totalCommission,
-      addedBy: product.addedBy.name,
+      addedBy: product.addedBy?.name || "غير معروف",
       createdAt: product.createdAt,
       adSpendingHistory: adHistoryString,
       totalAdSpending: product.totalAdSpending,
     });
-    // make name column bold and black and background color light blue
-    const nameColumn = worksheet.getColumn("name");
+  });
 
-    nameColumn.eachCell({ includeEmpty: false }, (cell, rowNumber) => {
-      if (rowNumber > 1) {
-        // استثني الصف الأول اللي هو العنوان
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFCCE5FF" }, // لون أزرق سماوي فاتح
-        };
+  // style name column
+  const nameColumn = worksheet.getColumn("name");
+  nameColumn.eachCell({ includeEmpty: false }, (cell, rowNumber) => {
+    if (rowNumber > 1) {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFCCE5FF" }, 
+      };
+      cell.font = {
+        color: { argb: "FF000000" }, 
+        bold: true,
+      };
+    }
+  });
 
-        cell.font = {
-          color: { argb: "FF000000" }, // لون الخط أسود (اختياري)
-          bold: true, // لو عايز تخلي الاسم غامق
-        };
-      }
-    });
-    // add border to all cells
-    worksheet.eachRow((row, rowNumber) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
-      });
+  // add borders to all cells
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
     });
   });
 
+  // export file
   res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

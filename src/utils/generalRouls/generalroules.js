@@ -7,8 +7,8 @@ export const validId = (value, helper) => {
 };
 
 export const generalRoules = {
-  id: joi.string().custom(validId),
-  name: joi.string().required().min(3).messages({
+  id: joi.string().custom(validId).required(),
+  name: joi.string().required().min(3).max(20).messages({
     "string.min": "name length must be at least 3 characters long",
     "any.required": "name is required",
   }),

@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 const adSpendingSchema = new mongoose.Schema(
   {
     date: { type: String, default: () => new Date().toLocaleDateString("en-GB") },
-    price: { type: Number },
-    platform: { type: String },
+    price: { type: Number  ,required: true ,min: 0 ,trim: true },
+    platform: { type: String ,required: true ,trim: true  },
     notes: { type: String },
   },
   { _id: false }
