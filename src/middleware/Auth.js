@@ -50,8 +50,6 @@ export const Authentication = asyncHandler(async (req, res, next) => {
   next();
 });
 
-
-
 // Authorization middleware for all routes
 export const Authorization = (RoleType) => {
   return asyncHandler(async (req, res, next) => {
