@@ -12,7 +12,7 @@ const bootstrap = (app, express) => {
   app.use(express.json());
   // users 
   app.use("/users", UserRouter);
-  // products
+  // products 
   app.use("/products", ProductRouter);
   // connect to DB
   DBC();
