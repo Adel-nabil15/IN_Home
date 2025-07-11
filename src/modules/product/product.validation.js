@@ -48,6 +48,7 @@ export const updateProductSchema = {
       price: joi.number().min(0),
       quantity: joi.number().min(0),
       commission: joi.number().min(0),
+      isFreezed: joi.boolean(),
       adSpendingHistory: joi.array().items(
         joi.object({
           date: joi.string(),
@@ -58,5 +59,6 @@ export const updateProductSchema = {
       ),
       quantitySold: joi.number().min(0),
     })
+
     .required(),
 };
