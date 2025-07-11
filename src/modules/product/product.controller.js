@@ -16,7 +16,6 @@ ProductRouter.post("/addProduct",validation(addProductSchema), Authentication, A
 ProductRouter.get("/getProducts", Authentication, getProducts);
 ProductRouter.get("/getOneProduct/:id", Authentication, getOneProduct);
 ProductRouter.patch("/updateProduct/:id",validation(updateProductSchema), Authentication, Authorization(["superadmin", "admin"]), updateProduct);
-ProductRouter.delete("/deleteProduct/:id", Authentication,Authorization(["superadmin"]), deleteProduct);
 ProductRouter.get("/exportProductsToExcel", Authentication, Authorization(["superadmin"]), exportProductsToExcel); 
 // ===========================================================================
 

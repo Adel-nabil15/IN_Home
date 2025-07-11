@@ -117,26 +117,6 @@ export const getOneProduct = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "product fetched successfully", product });
 });
 
-// ----------------------- deleteProduct -----------------------
-export const deleteProduct = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  // check if product id is valid
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return next(new Error("Invalid product ID", { cause: 400 }));
-  }
-  // delete product from database
-  const product = await ProductModel.findOneAndUpdate(
-    { _id: id },
-    { isFreezed: true },
-    { new: true }
-  );
-  // check if product exists
-  if (!product) {
-    return next(new Error("product not found", { cause: 404 }));
-  }
-  // send response to client
-  res.status(200).json({ message: "product deleted successfully" });
-});
 
 // ----------------------- exportProductsToExcel -----------------------
 export const exportProductsToExcel = asyncHandler(async (req, res, next) => {
