@@ -9,7 +9,7 @@ const bootstrap = (app, express) => {
   // cors origin middleware
  app.use(cors({
   origin: ["https://in-home-eight.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
   // json middleware
