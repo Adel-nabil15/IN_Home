@@ -2,6 +2,8 @@ import cors from "cors";
 import DBC from "./src/DB/DBC.js";
 import UserRouter from "./src/modules/users/user.controller.js";
 import { GlobalError } from "./src/utils/Error/index.js";
+import dotenv from "dotenv";
+dotenv.config();
 import ProductRouter from "./src/modules/product/product.controller.js";
 const bootstrap = (app, express) => {
 
