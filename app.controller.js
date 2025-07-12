@@ -7,16 +7,22 @@ import { GlobalError } from "./src/utils/Error/index.js";
 import ProductRouter from "./src/modules/product/product.controller.js";
 const bootstrap = (app, express) => {
   // cors origin middleware
- app.use(cors({
-  origin: ["https://in-home-eight.vercel.app"],
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-}));
+  app.use(
+    cors({
+      origin: [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://in-home-eight.vercel.app",
+      ],
+      methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+      credentials: true,
+    })
+  );
   // json middleware
   app.use(express.json());
-  // users 
+  // users
   app.use("/users", UserRouter);
-  // products 
+  // products
   app.use("/products", ProductRouter);
   // connect to DB
   DBC();
