@@ -43,9 +43,10 @@ const bootstrap = (app, express) => {
       callback(new Error('Not allowed by CORS'))
     }
   },
-  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
   privateNetworkAccess: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }
   app.use(cors(corsOptions))
   app.options("*", cors(corsOptions));
