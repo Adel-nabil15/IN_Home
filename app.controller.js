@@ -6,7 +6,7 @@ import ProductRouter from "./src/modules/product/product.controller.js";
 const bootstrap = (app, express) => {
 
   // cors oprtions
-  const whitelist = ["http://localhost:3000","http://localhost:5173","https://in-home-eight.vercel.app"];
+  const whitelist = ["http://localhost:3000","http://localhost:5173","https://in-home-eight.vercel.app","https://instore-iota.vercel.app"];
   const corsOptions = {
   origin: function (origin, callback) {
     if (!origin ||  whitelist.indexOf(origin) !== -1) {
