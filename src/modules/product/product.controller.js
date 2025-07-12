@@ -4,7 +4,6 @@ import {
   updateProduct,
   getProducts,
   getOneProduct,
-  deleteProduct,
   exportProductsToExcel,
 } from "./product.service.js";
 import { Authentication, Authorization } from "../../middleware/Auth.js";
